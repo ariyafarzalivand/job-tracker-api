@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
      # Third-party apps
     'rest_framework',
+    'drf_spectacular',
     # Local apps
     'applications',
 ]
@@ -119,4 +120,12 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    # Generates the OpenAPI schema that Swagger UI displays.
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Job Tracker API",
+    "DESCRIPTION": "REST API for tracking job applications.",
+    "VERSION": "1.0.0",
 }
