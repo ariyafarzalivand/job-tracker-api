@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     # Third-party apps
     "rest_framework",
     "drf_spectacular",
+    "django_filters",
     # Local apps
     "applications",
 ]
@@ -133,6 +134,14 @@ REST_FRAMEWORK = {
     # List endpoints return one page at a time instead of every record.
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    # Backends for exact filters (?status=offer), text search (?search=...)
+    # and sorting (?ordering=-applied_date). Each view chooses which fields
+    # are allowed, so nothing is exposed by accident.
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {

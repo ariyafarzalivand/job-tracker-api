@@ -46,13 +46,14 @@ def test_user_sees_only_own_applications(auth_client, user, other_user):
     assert response.data["results"][0]["company"] == "Mine GmbH"
 
 
-def create_application(owner, company="Example GmbH"):
+def create_application(owner, company="Example GmbH", **extra_fields):
     # Small helper so each test only states what matters to it.
     return JobApplication.objects.create(
         owner=owner,
         company=company,
         position="Developer",
         applied_date="2026-11-20",
+        **extra_fields,
     )
 
 
@@ -125,3 +126,44 @@ def test_list_is_paginated(auth_client, user):
     assert len(response.data["results"]) == 20
     # A link to the second page must be offered.
     assert response.data["next"] is not None
+
+
+def test_filter_by_status(auth_client, user):
+    create_application(user, company="Applied AG")
+    create_application(
+        user, company="Interview GmbH", status=JobApplication.Status.INTERVIEW
+    )
+
+    response = auth_client.get(APPLICATIONS_URL, {"status": "interview"})
+
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["company"] == "Interview GmbH"
+
+
+def test_search_by_company_name(auth_client, user):
+    create_application(user, company="Siemens AG")
+    create_application(user, company="Bosch GmbH")
+
+    response = auth_client.get(APPLICATIONS_URL, {"search": "siemens"})
+
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["company"] == "Siemens AG"
+
+
+def test_ordering_by_company(auth_client, user):
+    create_application(user, company="Zeta AG")
+    create_application(user, company="Alpha GmbH")
+
+    response = auth_client.get(APPLICATIONS_URL, {"ordering": "company"})
+
+    companies = [item["company"] for item in response.data["results"]]
+    assert companies == ["Alpha GmbH", "Zeta AG"]
+
+
+def test_search_never_returns_other_users_applications(auth_client, other_user):
+    # Filters work on top of the user's own queryset, so this must stay empty.
+    create_application(other_user, company="Secret AG")
+
+    response = auth_client.get(APPLICATIONS_URL, {"search": "secret"})
+
+    assert response.data["count"] == 0
