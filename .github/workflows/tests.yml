@@ -20,9 +20,11 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+          # Re-install dependencies when either requirements file changes.
+          cache-dependency-path: requirements*.txt
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Run tests
         run: pytest

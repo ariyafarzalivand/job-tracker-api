@@ -1,0 +1,5 @@
+# Extra packages for development and testing.
+# Includes everything the application needs.
+-r requirements.txt
+pytest==9.2.0
+pytest-django==4.14.0
