@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from .models import JobApplication
+from applications.models import JobApplication
 
 APPLICATIONS_URL = "/api/applications/"
 
