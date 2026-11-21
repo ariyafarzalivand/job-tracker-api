@@ -149,3 +149,29 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "REST API for tracking job applications.",
     "VERSION": "1.0.0",
 }
+
+# Log messages from the application to the console, which is where Docker
+# collects them. The level can be changed with LOG_LEVEL in the environment,
+# for example DEBUG while developing.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "applications": {
+            "handlers": ["console"],
+            "level": os.environ.get("LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+    },
+}

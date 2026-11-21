@@ -1,3 +1,5 @@
+import logging
+
 from applications.models import JobApplication
 
 APPLICATIONS_URL = "/api/applications/"
@@ -167,3 +169,22 @@ def test_search_never_returns_other_users_applications(auth_client, other_user):
     response = auth_client.get(APPLICATIONS_URL, {"search": "secret"})
 
     assert response.data["count"] == 0
+
+
+def test_create_logs_id_but_not_personal_data(auth_client, user, caplog, monkeypatch):
+    # The "applications" logger does not propagate to the root logger,
+    # which is where caplog listens, so allow it for this test only.
+    monkeypatch.setattr(logging.getLogger("applications"), "propagate", True)
+    payload = {
+        "company": "Private GmbH",
+        "position": "Backend Developer",
+        "applied_date": "2026-11-20",
+    }
+
+    with caplog.at_level(logging.INFO, logger="applications"):
+        response = auth_client.post(APPLICATIONS_URL, payload, format="json")
+
+    assert response.status_code == 201
+    assert f"Application created: id={response.data['id']}" in caplog.text
+    # Personal data must never be written to log files.
+    assert "Private GmbH" not in caplog.text

@@ -1,7 +1,11 @@
+import logging
+
 from rest_framework import permissions, viewsets
 
 from .models import JobApplication
 from .serializers import JobApplicationSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class JobApplicationViewSet(viewsets.ModelViewSet):
@@ -26,4 +30,21 @@ class JobApplicationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Set the owner on the server instead of trusting the client.
-        serializer.save(owner=self.request.user)
+        application = serializer.save(owner=self.request.user)
+        # Log ids only. Company names and notes are personal data and
+        # should not end up in log files.
+        logger.info(
+            "Application created: id=%s owner=%s",
+            application.pk,
+            self.request.user.pk,
+        )
+
+    def perform_destroy(self, instance):
+        # Read the id first, because it is gone after the delete.
+        application_id = instance.pk
+        instance.delete()
+        logger.info(
+            "Application deleted: id=%s owner=%s",
+            application_id,
+            self.request.user.pk,
+        )
