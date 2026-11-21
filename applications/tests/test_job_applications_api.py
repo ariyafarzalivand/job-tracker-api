@@ -42,8 +42,8 @@ def test_user_sees_only_own_applications(auth_client, user, other_user):
     response = auth_client.get(APPLICATIONS_URL)
 
     assert response.status_code == 200
-    assert len(response.data) == 1
-    assert response.data[0]["company"] == "Mine GmbH"
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["company"] == "Mine GmbH"
 
 
 def create_application(owner, company="Example GmbH"):
@@ -111,3 +111,17 @@ def test_create_rejects_invalid_status(auth_client):
 
     assert response.status_code == 400
     assert "status" in response.data
+
+
+def test_list_is_paginated(auth_client, user):
+    # One more application than fits on a single page (PAGE_SIZE is 20).
+    for number in range(21):
+        create_application(user, company=f"Company {number}")
+
+    response = auth_client.get(APPLICATIONS_URL)
+
+    assert response.status_code == 200
+    assert response.data["count"] == 21
+    assert len(response.data["results"]) == 20
+    # A link to the second page must be offered.
+    assert response.data["next"] is not None

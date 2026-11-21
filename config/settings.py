@@ -130,6 +130,9 @@ REST_FRAMEWORK = {
     ),
     # Generates the OpenAPI schema that Swagger UI displays.
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # List endpoints return one page at a time instead of every record.
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }
 
 SPECTACULAR_SETTINGS = {
