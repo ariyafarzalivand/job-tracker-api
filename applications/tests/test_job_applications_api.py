@@ -44,3 +44,70 @@ def test_user_sees_only_own_applications(auth_client, user, other_user):
     assert response.status_code == 200
     assert len(response.data) == 1
     assert response.data[0]["company"] == "Mine GmbH"
+
+
+def create_application(owner, company="Example GmbH"):
+    # Small helper so each test only states what matters to it.
+    return JobApplication.objects.create(
+        owner=owner,
+        company=company,
+        position="Developer",
+        applied_date="2026-11-20",
+    )
+
+
+def detail_url(application):
+    return f"{APPLICATIONS_URL}{application.id}/"
+
+
+def test_user_can_update_own_application(auth_client, user):
+    application = create_application(user)
+
+    response = auth_client.patch(
+        detail_url(application), {"status": "interview"}, format="json"
+    )
+
+    assert response.status_code == 200
+    application.refresh_from_db()
+    assert application.status == JobApplication.Status.INTERVIEW
+
+
+def test_user_can_delete_own_application(auth_client, user):
+    application = create_application(user)
+
+    response = auth_client.delete(detail_url(application))
+
+    assert response.status_code == 204
+    assert not JobApplication.objects.exists()
+
+
+def test_user_cannot_view_another_users_application(auth_client, other_user):
+    application = create_application(other_user)
+
+    response = auth_client.get(detail_url(application))
+
+    # 404 instead of 403, so the API does not reveal that the object exists.
+    assert response.status_code == 404
+
+
+def test_user_cannot_delete_another_users_application(auth_client, other_user):
+    application = create_application(other_user)
+
+    response = auth_client.delete(detail_url(application))
+
+    assert response.status_code == 404
+    assert JobApplication.objects.filter(pk=application.pk).exists()
+
+
+def test_create_rejects_invalid_status(auth_client):
+    payload = {
+        "company": "Test GmbH",
+        "position": "Backend Developer",
+        "applied_date": "2026-11-20",
+        "status": "not-a-real-status",
+    }
+
+    response = auth_client.post(APPLICATIONS_URL, payload, format="json")
+
+    assert response.status_code == 400
+    assert "status" in response.data
