@@ -26,5 +26,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      # Fail early on style problems and bugs that ruff can detect.
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Check formatting with ruff
+        run: ruff format --check .
+
       - name: Run tests
         run: pytest
